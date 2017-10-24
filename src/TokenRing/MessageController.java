@@ -1,8 +1,6 @@
 package TokenRing;
 
-import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.InputStreamReader;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
@@ -22,7 +20,6 @@ public class MessageController implements Runnable {
     private String nickname;
     private int time_token;
     private Boolean token;
-    private String sentence;
 
     private static final String ACK = "4067";
     private static final String TOKEN = "4060";
@@ -53,11 +50,6 @@ public class MessageController implements Runnable {
         if (msg.contains(TOKEN)) {
             System.out.println("\n Token Recebido: " + msg);
             token = true;
-            BufferedReader inFromUser = new BufferedReader(new InputStreamReader(System.in));
-            System.out.print("\n Digite uma menssagem: ");
-            sentence = inFromUser.readLine();
-            String messageToSend = buildDadosMessage(sentence, "Paulo");
-            queue.addLocalMessage(messageToSend);
         }
 
         if (msg.contains(ACK)) {
@@ -106,6 +98,7 @@ public class MessageController implements Runnable {
 
     @Override
     public void run() {
+        
         DatagramSocket clientSocket = null;
         byte[] sendData;
 
@@ -146,7 +139,7 @@ public class MessageController implements Runnable {
                     if (msg.equals(TOKEN)) {
                         token = false;
                     }
-                    
+
                     clientSocket.send(sendPacket);
                 } catch (IOException ex) {
                     Logger.getLogger(MessageController.class.getName()).log(Level.SEVERE, null, ex);
@@ -188,9 +181,5 @@ public class MessageController implements Runnable {
 
     private String buildAckMessage(String apelido) {
         return ACK + ";" + apelido;
-    }
-
-    private String buildDadosMessage(String message, String apelidoDestino) {
-        return MSG_DADOS + ";" + nickname + ";" + apelidoDestino + ";" + message;
     }
 }
