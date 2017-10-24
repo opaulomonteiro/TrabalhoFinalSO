@@ -12,7 +12,7 @@ public class TokenRing {
 
     private static final String MSG_DADOS = "4066";
 
-    public static void main(String[] args) throws IOException {
+    public static void main(String[] args) throws IOException, InterruptedException {
         String ip_port;
         int port;
         int t_token = 0;
@@ -57,6 +57,7 @@ public class TokenRing {
          * MessageQueue()
          *
          */
+        
         BufferedReader inFromUser = new BufferedReader(new InputStreamReader(System.in));
         String sentence = "";
         while (true) {
@@ -67,8 +68,9 @@ public class TokenRing {
                 Logger.getLogger(MessageController.class.getName()).log(Level.SEVERE, null, ex);
             }
             String messageToSend = buildDadosMessage(sentence, nickname, "Paulo");
-            queue.addLocalMessage(messageToSend);
+            controller.addLocalMessage(messageToSend);
         }
+        
 
     }
 

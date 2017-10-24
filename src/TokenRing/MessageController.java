@@ -98,9 +98,9 @@ public class MessageController implements Runnable {
 
     @Override
     public void run() {
-        
+
         DatagramSocket clientSocket = null;
-        byte[] sendData;
+        byte[] sendData = null;
 
         /* Cria socket para envio de mensagem */
         try {
@@ -123,16 +123,16 @@ public class MessageController implements Runnable {
             }
 
             if (token) {
+                DatagramPacket sendPacket = null; 
                 String msg = "";
-                if (queue.isLocalQueueEmpty()) {
-                    msg = TOKEN;
-                    sendData = TOKEN.getBytes();
-                } else {
+                if (!queue.isLocalQueueEmpty()) {
                     msg = queue.removeMessageLocal();
                     sendData = msg.getBytes();
-                }
+                    sendPacket = new DatagramPacket(sendData, sendData.length, IPAddress, port);
 
-                DatagramPacket sendPacket = new DatagramPacket(sendData, sendData.length, IPAddress, port);
+                }
+                
+                if(queue.isLocalQueueEmpty()) continue;
 
                 /* Realiza envio da mensagem. */
                 try {
@@ -181,5 +181,9 @@ public class MessageController implements Runnable {
 
     private String buildAckMessage(String apelido) {
         return ACK + ";" + apelido;
+    }
+    
+    public void addLocalMessage(String msg) {
+        queue.addLocalMessage(msg);
     }
 }
