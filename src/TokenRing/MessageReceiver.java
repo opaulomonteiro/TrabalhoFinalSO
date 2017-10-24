@@ -3,7 +3,6 @@ package TokenRing;
 import java.io.IOException;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
-import java.net.InetAddress;
 import java.net.SocketException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -13,14 +12,12 @@ import java.util.logging.Logger;
  */
 
 public class MessageReceiver implements Runnable{
-    private MessageQueue queue;
-    private int port;
-    private MessageController controller;
+    private final int port;
+    private final MessageController controller;
     
-    public MessageReceiver(MessageQueue t, int p, MessageController c){
-        queue = t;
-        port = p;
-        controller = c;
+    public MessageReceiver(int p, MessageController c){
+        this.port = p;
+        this.controller = c;
     }
     
     @Override
@@ -30,15 +27,15 @@ public class MessageReceiver implements Runnable{
         try {
             
             /* Inicializa o servidor para aguardar datagramas na porta especificada */
-            serverSocket = new DatagramSocket(5000);
+            serverSocket = new DatagramSocket(port);
         } catch (SocketException ex) {
             Logger.getLogger(MessageReceiver.class.getName()).log(Level.SEVERE, null, ex);
             return;
-        }
+        }     
         
-        byte[] receiveData = new byte[1024];
         
         while(true){
+            byte[] receiveData = new byte[1024];          
             
             /* Cria um DatagramPacket */
             DatagramPacket receivePacket = new DatagramPacket(receiveData, receiveData.length);

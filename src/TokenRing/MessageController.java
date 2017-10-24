@@ -51,12 +51,12 @@ public class MessageController implements Runnable {
     public void ReceivedMessage(String msg) throws IOException {
 
         if (msg.contains(TOKEN)) {
-            System.out.println("\n TOKEN RECEIVED: " + msg);
+            System.out.println("\n Token Recebido: " + msg);
             token = true;
             BufferedReader inFromUser = new BufferedReader(new InputStreamReader(System.in));
             System.out.print("\n Digite uma menssagem: ");
             sentence = inFromUser.readLine();
-            String messageToSend = buildDadosMessage(sentence, "Bob");
+            String messageToSend = buildDadosMessage(sentence, "Paulo");
             queue.addLocalMessage(messageToSend);
         }
 
@@ -68,11 +68,11 @@ public class MessageController implements Runnable {
 
             // a aplicação deve verificar se esse ACK é para ela (olhando o apelido que veio no ACK).            
             if (itsForMe(camposDaMensagem[1])) {
-                System.out.println("\n Confirmação do ACK, passando TOKEN para proxima estação");
+                System.out.println("\n Confirmação do ACK, enviando Token para proxima estação");
                 //Caso o ACK seja para ela, um token deve ser enviado para seu vizinho da direita.
                 queue.addLocalMessage(TOKEN);
             } else {
-                System.out.println("\n Encaminhando ack para proxima estação");
+                System.out.println("\n Encaminhando ACK para proxima estação");
                 //Caso não seja, esta mensagem deve ser enviada para seu vizinho da direita
                 queue.addNetWorkMessage(msg);
             }
@@ -89,10 +89,9 @@ public class MessageController implements Runnable {
             if (itsForMe(camposDaMensagem[2])) {
                 //a aplicação deve imprimir o apelido origem e a mensagem
                 System.out.println("\n Origem: " + camposDaMensagem[1] + " Mensagem: " + camposDaMensagem[3]);
-
                 // e deve também enviar uma mensagem de ACK de volta
                 String ackMessage = buildAckMessage(camposDaMensagem[1]);
-                System.out.println("\n Enviando msg de ACK:" + ackMessage);
+                System.out.println("\n Enviando msg de ACK: " + ackMessage);
                 queue.addNetWorkMessage(ackMessage);
             } else {
                 //esta mensagem deve ser enviada para seu vizinho da direita
@@ -147,9 +146,7 @@ public class MessageController implements Runnable {
                     if (msg.equals(TOKEN)) {
                         token = false;
                     }
-
-                    System.out.print("\n To COM o TOKEN , Enviando msg para maquina do lado " + new String(sendPacket.getData()));
-
+                    
                     clientSocket.send(sendPacket);
                 } catch (IOException ex) {
                     Logger.getLogger(MessageController.class.getName()).log(Level.SEVERE, null, ex);
@@ -161,8 +158,6 @@ public class MessageController implements Runnable {
                 if (!queue.isNetWorkQueueEmpty()) {
                     msg = queue.removeNetWorkMessage();
                     sendData = msg.getBytes();
-
-                    System.out.print("\n To Sem o TOKEN , Enviando msg para maquina do lado" + msg);
 
                     DatagramPacket sendPacket = new DatagramPacket(sendData, sendData.length, IPAddress, port);
 

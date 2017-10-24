@@ -28,7 +28,6 @@ public class MessageQueue {
     public void addLocalMessage(String message) {
         try {
             mutex.acquire();
-            System.out.print("\n Mensagem adicionada na fila local: " + message);
             localQueue.addLast(message);
             mutex.release();
         } catch (InterruptedException ex) {
@@ -41,7 +40,6 @@ public class MessageQueue {
         try {
             mutex.acquire();
             String msg = localQueue.removeFirst();
-            System.out.print("\n Mensagem removida da fila local: " + msg);
             mutex.release();
             return msg;
         } catch (InterruptedException ex) {
@@ -57,7 +55,6 @@ public class MessageQueue {
     public void addNetWorkMessage(String message) {
         try {
             mutex2.acquire();
-            System.out.print("\n Mensagem adicionada na fila de netWork: " + message);
             netWorkQueue.addLast(message);
             mutex2.release();
         } catch (InterruptedException ex) {
@@ -70,7 +67,6 @@ public class MessageQueue {
         try {
             mutex2.acquire();
             String msg = netWorkQueue.removeFirst();
-            System.out.print("\n Mensagem removida da fila de netWork: " + msg);
             mutex2.release();
             return msg;
         } catch (InterruptedException ex) {

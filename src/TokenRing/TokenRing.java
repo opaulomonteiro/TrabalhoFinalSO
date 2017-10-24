@@ -4,7 +4,6 @@ import java.io.BufferedReader;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -45,7 +44,7 @@ public class TokenRing {
         
         MessageController controller = new MessageController(queue, ip_port, t_token, token, nickname);
         Thread thr_controller = new Thread(controller);
-        Thread thr_receiver = new Thread(new MessageReceiver(queue, port, controller));
+        Thread thr_receiver = new Thread(new MessageReceiver(port, controller));
         
         thr_controller.start();
         thr_receiver.start();
