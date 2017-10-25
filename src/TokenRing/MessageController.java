@@ -58,7 +58,7 @@ public class MessageController implements Runnable {
             //Posição 1 = Apelido Destino
             String[] camposDaMensagem = msg.split(";");
 
-            // a aplicação deve verificar se esse ACK é para ela (olhando o apelido que veio no ACK).            
+            // a aplicação deve verificar se esse ACK é para ela (olhando o apelido que veio no ACK).
             if (itsForMe(camposDaMensagem[1])) {
                 System.out.println("\n Confirmação do ACK, enviando Token para proxima estação");
                 //Caso o ACK seja para ela, um token deve ser enviado para seu vizinho da direita.
@@ -112,7 +112,7 @@ public class MessageController implements Runnable {
 
         while (true) {
 
-            /* Neste exemplo, considera-se que a estação sempre recebe o token 
+            /* Neste exemplo, considera-se que a estação sempre recebe o token
                e o repassa para a próxima estação. */
             try {
                 /* Espera time_token segundos para o envio do token. Isso é apenas para depuração,
@@ -123,27 +123,26 @@ public class MessageController implements Runnable {
             }
 
             if (token) {
-                DatagramPacket sendPacket = null; 
+                DatagramPacket sendPacket = null;
                 String msg = "";
                 if (!queue.isLocalQueueEmpty()) {
                     msg = queue.removeMessageLocal();
                     sendData = msg.getBytes();
                     sendPacket = new DatagramPacket(sendData, sendData.length, IPAddress, port);
 
-                }
-                
-                if(queue.isLocalQueueEmpty()) continue;
+                    try {
+                        if (msg.equals(TOKEN)) {
+                            token = false;
+                        }
 
-                /* Realiza envio da mensagem. */
-                try {
-                    if (msg.equals(TOKEN)) {
-                        token = false;
+                        /* Realiza envio da mensagem. */
+                        clientSocket.send(sendPacket);
+                    } catch (IOException ex) {
+                        Logger.getLogger(MessageController.class.getName()).log(Level.SEVERE, null, ex);
                     }
 
-                    clientSocket.send(sendPacket);
-                } catch (IOException ex) {
-                    Logger.getLogger(MessageController.class.getName()).log(Level.SEVERE, null, ex);
                 }
+
             }
 
             if (!token) {
@@ -182,7 +181,7 @@ public class MessageController implements Runnable {
     private String buildAckMessage(String apelido) {
         return ACK + ";" + apelido;
     }
-    
+
     public void addLocalMessage(String msg) {
         queue.addLocalMessage(msg);
     }

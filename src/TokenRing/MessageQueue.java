@@ -16,13 +16,15 @@ public class MessageQueue {
      * Não se esqueça que em uma fila, o primeiro elemente a entrar será o primeiro
      * a ser removido.
      */
-    LinkedList<String> localQueue = new LinkedList<>();
-    LinkedList<String> netWorkQueue = new LinkedList<>();
+    LinkedList<String> localQueue;
+    LinkedList<String> netWorkQueue;
 
     Semaphore mutex = new Semaphore(1);
     Semaphore mutex2 = new Semaphore(1);
 
     public MessageQueue() {
+        this.localQueue = new LinkedList<>();
+        this.netWorkQueue = new LinkedList<>();
     }
 
     public void addLocalMessage(String message) {

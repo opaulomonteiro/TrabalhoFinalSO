@@ -48,7 +48,7 @@ public class TokenRing {
         MessageController controller = new MessageController(queue, ip_port, t_token, token, nickname);
         Thread thr_controller = new Thread(controller);
         Thread thr_receiver = new Thread(new MessageReceiver(port, controller));
-
+        
         thr_controller.start();
         thr_receiver.start();
 
@@ -57,9 +57,9 @@ public class TokenRing {
          * MessageQueue()
          *
          */
-        
         BufferedReader inFromUser = new BufferedReader(new InputStreamReader(System.in));
         String sentence = "";
+        String destinatario = "";
         while (true) {
             System.out.print("\n Digite uma menssagem: ");
             try {
@@ -67,10 +67,16 @@ public class TokenRing {
             } catch (IOException ex) {
                 Logger.getLogger(MessageController.class.getName()).log(Level.SEVERE, null, ex);
             }
-            String messageToSend = buildDadosMessage(sentence, nickname, "Paulo");
-            controller.addLocalMessage(messageToSend);
+            System.out.print("\n Digite o destinatario: ");
+            try {
+                destinatario = inFromUser.readLine();
+            } catch (IOException ex) {
+                Logger.getLogger(MessageController.class.getName()).log(Level.SEVERE, null, ex);
+            }
+            String messageToSend = buildDadosMessage(sentence, nickname, destinatario);
+            queue.addLocalMessage(messageToSend);
+            System.out.println("Tamanho da fila = " + queue.localQueue.size());
         }
-        
 
     }
 
