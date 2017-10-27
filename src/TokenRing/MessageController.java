@@ -20,6 +20,7 @@ public class MessageController implements Runnable {
     private String nickname;
     private int time_token;
     private Boolean token;
+    private Boolean receivedAck;
 
     private static final String ACK = "4067";
     private static final String TOKEN = "4060";
@@ -34,6 +35,7 @@ public class MessageController implements Runnable {
         token = t;
         nickname = n;
         WaitForMessage = new Semaphore(0);
+        receivedAck = false;
     }
 
     /**
@@ -47,9 +49,10 @@ public class MessageController implements Runnable {
      */
     public void ReceivedMessage(String msg) throws IOException {
 
-        if (msg.contains(TOKEN)) {
+        if (msg.trim().equalsIgnoreCase(TOKEN)) {
             System.out.println("\n Token Recebido: " + msg);
             token = true;
+            receivedAck = false;
         }
 
         if (msg.contains(ACK)) {
@@ -62,7 +65,7 @@ public class MessageController implements Runnable {
             if (itsForMe(camposDaMensagem[1])) {
                 System.out.println("\n Confirmação do ACK, enviando Token para proxima estação");
                 //Caso o ACK seja para ela, um token deve ser enviado para seu vizinho da direita.
-                queue.addLocalMessage(TOKEN);
+                receivedAck = true;
             } else {
                 System.out.println("\n Encaminhando ACK para proxima estação");
                 //Caso não seja, esta mensagem deve ser enviada para seu vizinho da direita
@@ -123,54 +126,32 @@ public class MessageController implements Runnable {
             }
 
             if (token) {
-                DatagramPacket sendPacket = null;
-                String msg = "";
+                if (receivedAck) {
+                    token = false;               
+                    
+                    sendData = getMessageBytes(TOKEN);                    
+                    sendPackage(clientSocket, buildDatagramPacket(sendData));
+                }
+
                 if (!queue.isLocalQueueEmpty()) {
-                    msg = queue.removeMessageLocal();
-                    sendData = msg.getBytes();
-                    sendPacket = new DatagramPacket(sendData, sendData.length, IPAddress, port);
+                    sendData = getMessageBytes(queue.removeMessageLocal());
+                    
+                    sendPackage(clientSocket, buildDatagramPacket(sendData));
 
-                    try {
-                        if (msg.equals(TOKEN)) {
-                            token = false;
-                        }
-
-                        /* Realiza envio da mensagem. */
-                        clientSocket.send(sendPacket);
-                    } catch (IOException ex) {
-                        Logger.getLogger(MessageController.class.getName()).log(Level.SEVERE, null, ex);
-                    }
-
-                }
-
-            }
-
-            if (!token) {
-                String msg = "";
+                } else {                   
+                    token = false;              
+                    
+                    sendData = getMessageBytes(TOKEN);
+                    System.out.println("\n TO COM A FILA ZERADA, ENVIANDO TOKEN");
+                    
+                    sendPackage(clientSocket, buildDatagramPacket(sendData));
+                }               
+            } else {
                 if (!queue.isNetWorkQueueEmpty()) {
-                    msg = queue.removeNetWorkMessage();
-                    sendData = msg.getBytes();
-
-                    DatagramPacket sendPacket = new DatagramPacket(sendData, sendData.length, IPAddress, port);
-
-                    /* Realiza envio da mensagem. */
-                    try {
-                        if (msg.equals(TOKEN)) {
-                            token = false;
-                        }
-                        clientSocket.send(sendPacket);
-                    } catch (IOException ex) {
-                        Logger.getLogger(MessageController.class.getName()).log(Level.SEVERE, null, ex);
-                    }
+                    sendData = getMessageBytes(queue.removeNetWorkMessage());
+                    sendPackage(clientSocket, buildDatagramPacket(sendData));
                 }
-            }
-
-            /* A estação fica aguardando a ação gerada pela função ReceivedMessage(). */
-            try {
-                WaitForMessage.acquire();
-            } catch (InterruptedException ex) {
-                Logger.getLogger(MessageController.class.getName()).log(Level.SEVERE, null, ex);
-            }
+            }         
         }
     }
 
@@ -181,8 +162,28 @@ public class MessageController implements Runnable {
     private String buildAckMessage(String apelido) {
         return ACK + ";" + apelido;
     }
+    
+    private void sendPackage(DatagramSocket clientSocket, DatagramPacket sendPacket) {
+        try {
+            /* Realiza envio da mensagem. */
+            clientSocket.send(sendPacket);
 
-    public void addLocalMessage(String msg) {
-        queue.addLocalMessage(msg);
+            /* A estação fica aguardando a ação gerada pela função ReceivedMessage(). */
+            try {
+                WaitForMessage.acquire();
+            } catch (InterruptedException ex) {
+                Logger.getLogger(MessageController.class.getName()).log(Level.SEVERE, null, ex);
+            }
+        } catch (IOException ex) {
+            Logger.getLogger(MessageController.class.getName()).log(Level.SEVERE, null, ex);
+        }
+    }
+
+    private DatagramPacket buildDatagramPacket(byte[] sendData) {
+        return new DatagramPacket(sendData, sendData.length, IPAddress, port);
+    }
+
+    private byte[] getMessageBytes(String msg) {
+        return msg.getBytes();
     }
 }

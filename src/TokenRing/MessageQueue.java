@@ -42,6 +42,7 @@ public class MessageQueue {
         try {
             mutex.acquire();
             String msg = localQueue.removeFirst();
+            System.out.println("Tamanho da fila Local: " + localQueue.size());
             mutex.release();
             return msg;
         } catch (InterruptedException ex) {

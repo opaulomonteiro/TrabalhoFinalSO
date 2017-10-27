@@ -75,7 +75,7 @@ public class TokenRing {
             }
             String messageToSend = buildDadosMessage(sentence, nickname, destinatario);
             queue.addLocalMessage(messageToSend);
-            System.out.println("Tamanho da fila = " + queue.localQueue.size());
+            System.out.println("Tamanho da fila Local: " + queue.localQueue.size());
         }
 
     }
