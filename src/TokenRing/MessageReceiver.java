@@ -27,7 +27,7 @@ public class MessageReceiver implements Runnable{
         try {
             
             /* Inicializa o servidor para aguardar datagramas na porta especificada */
-            serverSocket = new DatagramSocket(port);
+            serverSocket = new DatagramSocket(6000);
         } catch (SocketException ex) {
             Logger.getLogger(MessageReceiver.class.getName()).log(Level.SEVERE, null, ex);
             return;

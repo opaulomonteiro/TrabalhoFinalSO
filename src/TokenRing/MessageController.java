@@ -74,7 +74,6 @@ public class MessageController implements Runnable {
         }
 
         if (msg.contains(MSG_DADOS)) {
-            System.out.println("\n Mensagem de dados recebida: " + msg);
             //Posição 0 = Identificador de msg
             //Posição 1 = Apelido Origem
             //Posição 2 = Apelido Destino
@@ -82,19 +81,17 @@ public class MessageController implements Runnable {
             String[] camposDaMensagem = msg.split(";");
 
             if (itsForMe(camposDaMensagem[2])) {
-                //a aplicação deve imprimir o apelido origem e a mensagem
-                System.out.println("\n Origem: " + camposDaMensagem[1] + " Mensagem: " + camposDaMensagem[3]);
-                // e deve também enviar uma mensagem de ACK de volta
+                System.out.println("\n " +  camposDaMensagem[1] + ": " + camposDaMensagem[3]);
+                
                 String ackMessage = buildAckMessage(camposDaMensagem[1]);
-                System.out.println("\n Enviando msg de ACK: " + ackMessage);
+                
+                System.out.println("\n Enviando msg de ACK: " + ackMessage);                
                 queue.addNetWorkMessage(ackMessage);
             } else {
-                //esta mensagem deve ser enviada para seu vizinho da direita
-                System.out.println("\n Encaminhando msg de dados para proxima estação");
+               System.out.println("\n Encaminhando msg de dados para proxima estação");
                 queue.addNetWorkMessage(msg);
             }
         }
-
         /* Libera a thread para execução. */
         WaitForMessage.release();
     }
@@ -102,56 +99,65 @@ public class MessageController implements Runnable {
     @Override
     public void run() {
 
-        DatagramSocket clientSocket = null;
+        DatagramSocket clientSocket = createClientSocket();
         byte[] sendData = null;
-
-        /* Cria socket para envio de mensagem */
-        try {
-            clientSocket = new DatagramSocket();
-        } catch (SocketException ex) {
-            Logger.getLogger(MessageController.class.getName()).log(Level.SEVERE, null, ex);
-            return;
-        }
 
         while (true) {
 
-            /* Neste exemplo, considera-se que a estação sempre recebe o token
-               e o repassa para a próxima estação. */
             try {
-                /* Espera time_token segundos para o envio do token. Isso é apenas para depuração,
-                   durante execução real faça time_token = 0,*/
                 Thread.sleep(time_token * 1000);
             } catch (InterruptedException ex) {
                 Logger.getLogger(MessageController.class.getName()).log(Level.SEVERE, null, ex);
             }
 
             if (token) {
-                if (receivedAck) {
-                    token = false;               
-                    
-                    sendData = getMessageBytes(TOKEN);                    
-                    sendPackage(clientSocket, buildDatagramPacket(sendData));
+                if (!queue.isLocalQueueEmpty()) {
+                    try {
+                        int retry = 0;
+                        String msg = queue.removeMessageLocal();
+                        sendData = getMessageBytes(msg);
+
+                        System.out.println("\n Enviando msg : " + msg);
+
+                        sendPackage(clientSocket, buildDatagramPacket(sendData));
+
+                        Thread.sleep(3000);
+                        while (receivedAck == false) {
+                            if (retry < 3) {
+                                try {
+                                    System.out.println("\n Re-Enviando msg");
+                                    clientSocket.send(buildDatagramPacket(sendData));
+
+                                    retry++;
+
+                                    System.out.println("\n Número de retrys: " + retry);
+                                    Thread.sleep(3000);
+                                } catch (IOException | InterruptedException ex) {
+                                    Logger.getLogger(MessageController.class.getName()).log(Level.SEVERE, null, ex);
+                                }
+                            } else {
+                                System.out.println("\n Não recebi ACK, enviando TOKEN pra rede");
+                                sendTokenMsg(clientSocket);
+                            }
+                        }
+                    } catch (InterruptedException ex) {
+                        Logger.getLogger(MessageController.class.getName()).log(Level.SEVERE, null, ex);
+                    }
+
+                } else {
+                    sendTokenMsg(clientSocket);
                 }
 
-                if (!queue.isLocalQueueEmpty()) {
-                    sendData = getMessageBytes(queue.removeMessageLocal());
-                    
-                    sendPackage(clientSocket, buildDatagramPacket(sendData));
+                if (receivedAck) {
+                    sendTokenMsg(clientSocket);
+                }
 
-                } else {                   
-                    token = false;              
-                    
-                    sendData = getMessageBytes(TOKEN);
-                    System.out.println("\n TO COM A FILA ZERADA, ENVIANDO TOKEN");
-                    
-                    sendPackage(clientSocket, buildDatagramPacket(sendData));
-                }               
             } else {
                 if (!queue.isNetWorkQueueEmpty()) {
                     sendData = getMessageBytes(queue.removeNetWorkMessage());
                     sendPackage(clientSocket, buildDatagramPacket(sendData));
                 }
-            }         
+            }
         }
     }
 
@@ -162,7 +168,7 @@ public class MessageController implements Runnable {
     private String buildAckMessage(String apelido) {
         return ACK + ";" + apelido;
     }
-    
+
     private void sendPackage(DatagramSocket clientSocket, DatagramPacket sendPacket) {
         try {
             /* Realiza envio da mensagem. */
@@ -185,5 +191,20 @@ public class MessageController implements Runnable {
 
     private byte[] getMessageBytes(String msg) {
         return msg.getBytes();
+    }
+
+    private void sendTokenMsg(DatagramSocket clientSocket) {
+        token = false;
+        sendPackage(clientSocket, buildDatagramPacket(getMessageBytes(TOKEN)));
+    }
+
+    private DatagramSocket createClientSocket() {
+        /* Cria socket para envio de mensagem */
+        try {
+            return new DatagramSocket();
+        } catch (SocketException ex) {
+            Logger.getLogger(MessageController.class.getName()).log(Level.SEVERE, null, ex);
+            return null;
+        }
     }
 }
