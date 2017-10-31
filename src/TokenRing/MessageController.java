@@ -138,6 +138,7 @@ public class MessageController implements Runnable {
                             } else {
                                 System.out.println("\n Não recebi ACK, enviando TOKEN pra rede");
                                 sendTokenMsg(clientSocket);
+                                break;
                             }
                         }
                     } catch (InterruptedException ex) {
