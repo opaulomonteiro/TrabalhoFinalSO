@@ -81,7 +81,7 @@ public class TokenRing {
     }
 
     private static String buildDadosMessage(String message, String nickName, String apelidoDestino) {
-        return MSG_DADOS + ";" + nickName + ";" + apelidoDestino + ";" + message;
+        return MSG_DADOS + ";" + nickName + ":" + apelidoDestino + ":" + message;
     }
 
 }

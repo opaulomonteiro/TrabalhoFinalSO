@@ -79,11 +79,12 @@ public class MessageController implements Runnable {
             //Posição 2 = Apelido Destino
             //Posição 3 = Mensagem
             String[] camposDaMensagem = msg.split(";");
+            String[] informacoes = camposDaMensagem[1].split(":");
 
-            if (itsForMe(camposDaMensagem[2])) {
-                System.out.println("\n " +  camposDaMensagem[1] + ": " + camposDaMensagem[3]);
+            if (itsForMe(informacoes[1])) {
+                System.out.println("\n " +  informacoes[0] + ": " + informacoes[2]);
                 
-                String ackMessage = buildAckMessage(camposDaMensagem[1]);
+                String ackMessage = buildAckMessage(informacoes[0]);
                 
                 System.out.println("\n Enviando msg de ACK: " + ackMessage);                
                 queue.addNetWorkMessage(ackMessage);
@@ -195,6 +196,7 @@ public class MessageController implements Runnable {
     }
 
     private void sendTokenMsg(DatagramSocket clientSocket) {
+        //System.out.println("\n ENVIANDO TOKEN");
         token = false;
         sendPackage(clientSocket, buildDatagramPacket(getMessageBytes(TOKEN)));
     }
